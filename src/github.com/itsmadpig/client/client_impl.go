@@ -66,7 +66,6 @@ func NewClient(masterClientHostPort string, port int, nodeID uint32) (ClientServ
 		var reply clientrpc.RegisterReply
 		err = clientServer.masterConn.Call("ClientServer.RegisterClient", args, &reply)
 		if err != nil {
-			fmt.Println("HEREHEREHERE")
 			return nil, err
 		}
 		fmt.Println(reply.Status)
@@ -76,7 +75,6 @@ func NewClient(masterClientHostPort string, port int, nodeID uint32) (ClientServ
 			time.Sleep(1000 * time.Millisecond)
 			err = clientServer.masterConn.Call("ClientServer.RegisterClient", args, &reply)
 			if err != nil {
-				fmt.Println("HEREHERE")
 				return nil, err
 			}
 		}
