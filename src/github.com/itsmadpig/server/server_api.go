@@ -1,6 +1,6 @@
 package server
 
-import "github.com/itsmadpig/rpc"
+import "github.com/itsmadpig/rpc/serverrpc"
 
 type PacmanServer interface {
 	//all the mothods

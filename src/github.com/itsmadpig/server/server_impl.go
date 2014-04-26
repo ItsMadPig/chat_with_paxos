@@ -3,7 +3,7 @@ package server
 import (
 	//"errors"
 	"fmt"
-	"github.com/itsmadpig/rpc"
+	"github.com/itsmadpig/rpc/serverrpc"
 	"net"
 	"net/http"
 	"net/rpc"
