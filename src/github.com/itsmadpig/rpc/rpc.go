@@ -1,17 +1,17 @@
-package clientrpc
+package serverrpc
 
-type RemoteClientServer interface {
+type RemoteServer interface {
 	//put methods here
-	RegisterClient(*RegisterArgs, *RegisterReply) error
+	RegisterServer(*RegisterArgs, *RegisterReply) error
 }
 
-type ClientServer struct {
+type PacmanServer struct {
 	// Embed all methods into the struct.
-	RemoteClientServer
+	RemoteServer
 }
 
 // Wrap wraps s in a type-safe wrapper struct to ensure that only the desired
 // StorageServer methods are exported to receive RPCs.
-func Wrap(s RemoteClientServer) RemoteClientServer {
-	return &ClientServer{s}
+func Wrap(s RemoteServer) RemoteServer {
+	return &PacmanServer{s}
 }

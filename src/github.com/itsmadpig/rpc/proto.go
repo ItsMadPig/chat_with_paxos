@@ -1,4 +1,4 @@
-package clientrpc
+package serverrpc
 
 const (
 	OK       = iota // OK = 0
