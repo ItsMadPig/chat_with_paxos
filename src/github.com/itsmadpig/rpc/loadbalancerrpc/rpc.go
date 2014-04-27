@@ -3,6 +3,7 @@ package loadbalancerrpc
 type RemoteLoadBalancer interface {
 	//put methods here
 	RouteToServer(*RouteArgs, *RouteReply) error
+	RegisterServer(*RegisterArgs, *RegisterReply) error
 }
 
 type LoadBalancer struct {

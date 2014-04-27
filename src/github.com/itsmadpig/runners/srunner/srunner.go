@@ -12,10 +12,10 @@ import (
 	"github.com/itsmadpig/server"
 )
 
-const defaultMasterPort = 9009
+const defaultPort = 9009
 
 var (
-	port           = flag.Int("port", defaultMasterPort, "port number to listen on")
+	port           = flag.Int("port", defaultPort, "port number to listen on")
 	masterHostPort = flag.String("master", "", "master storage server host port (if non-empty then this storage server is a slave)")
 	nodeID         = flag.Uint("id", 0, "a 32-bit unsigned node ID to use for consistent hashing")
 )
@@ -28,7 +28,8 @@ func main() {
 	flag.Parse()
 	if *masterHostPort == "" && *port == 0 {
 		// If masterHostPort string is empty, then this storage server is the master.
-		*port = defaultMasterPort
+		*port = defaultPort
+		*masterHostPort = "localhost:8009"
 	}
 
 	// If nodeID is 0, then assign a random 32-bit integer instead.

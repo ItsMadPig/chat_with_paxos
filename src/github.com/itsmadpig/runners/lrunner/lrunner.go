@@ -28,7 +28,7 @@ func main() {
 	// Create and start the StorageServer.
 	_, err := loadbalancer.NewLoadBalancer(*hostPort)
 	if err != nil {
-		log.Fatalln("Failed to create storage server:", err)
+		log.Fatalln("Failed to create load balancer:", err)
 	}
 	// Run the storage server forever.
 	fmt.Println("hostPort=", hostPort)

@@ -2,7 +2,7 @@ package serverrpc
 
 type RemoteServer interface {
 	//put methods here
-	RegisterServer(*RegisterArgs, *RegisterReply) error
+	Temp(*TempArgs, *TempReply) error
 }
 
 type PacmanServer struct {

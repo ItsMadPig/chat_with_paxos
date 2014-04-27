@@ -1,6 +1,7 @@
 package loadbalancer
 
 import (
+	"fmt"
 	"github.com/itsmadpig/rpc/loadbalancerrpc"
 	"net"
 	"net/http"
@@ -44,4 +45,9 @@ func (lb *loadBalancer) RouteToServer(args *loadbalancerrpc.RouteArgs, reply *lo
 	*reply = *pack
 	return nil
 
+}
+
+func (cl *loadBalancer) RegisterServer(args *loadbalancerrpc.RegisterArgs, reply *loadbalancerrpc.RegisterReply) error {
+	fmt.Println("HI")
+	return nil
 }
