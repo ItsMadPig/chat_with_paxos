@@ -1,8 +1,8 @@
 package serverrpc
 
 const (
-	OK       = iota // OK = 0
-	NotReady = iota // NotReady = 1
+	NotReady = iota // NotReady = 0
+	OK       = iota // OK = 1
 )
 
 type Node struct {

@@ -5,8 +5,9 @@ const (
 	RETRY = iota //1
 )
 const (
-	OK    = iota //0
-	NOTOK = iota //1
+	NOTOK    = iota //0
+	OK       = iota //1
+	NotReady = iota //2
 )
 const (
 	InitCliNum = 3
