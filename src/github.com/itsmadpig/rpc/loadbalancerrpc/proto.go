@@ -5,16 +5,17 @@ const (
 	RETRY = iota //1
 )
 const (
-	NOTOK    = iota //0
+	NotReady = iota //0
 	OK       = iota //1
-	NotReady = iota //2
+	MOSTFAIL = iota // 2
 )
 const (
 	InitCliNum = 3
 )
 
 type RouteArgs struct {
-	Attempt int
+	Attempt  int
+	HostPort string
 }
 
 type RouteReply struct {

@@ -8,6 +8,7 @@ import (
 	"net/rpc"
 	//"strings"
 	//"strconv"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -22,11 +23,13 @@ func NewPacClient(serverHostPort string, port int) (PacClient, error) {
 		return nil, err
 	}
 
-	args := &loadbalancerrpc.RouteArgs{Attempt: 0}
+	args := &loadbalancerrpc.RouteArgs{Attempt: 0, HostPort: ""}
 	var reply loadbalancerrpc.RouteReply
-	fmt.Println("Reach here")
 	cli.Call("LoadBalancer.RouteToServer", args, &reply)
 	for reply.Status != loadbalancerrpc.OK {
+		if reply.Status == loadbalancerrpc.MOSTFAIL {
+			return nil, errors.New("most servers failed alread")
+		}
 		fmt.Println("retrying to connect")
 		time.Sleep(1000 * time.Millisecond)
 		cli.Call("LoadBalancer.RouteToServer", args, &reply)
@@ -35,7 +38,11 @@ func NewPacClient(serverHostPort string, port int) (PacClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("server Hostport=", reply.HostPort)
 	pac := new(pacClient)
 	pac.client = cli2
 	return pac, nil
 }
+
+//if fail connection, do RouteToServer with failed HostPort
+//if all fail, stop client
