@@ -45,17 +45,15 @@ func NewServer(masterServerHostPort string, port int, nodeID uint32) (PacmanServ
 	var reply loadbalancerrpc.RegisterReply
 	err = pacmanServer.masterConn.Call("LoadBalancer.RegisterServer", args, &reply)
 	if err != nil {
-		return nil, err
+		fmt.Println(err)
 	}
-	fmt.Println(reply.Status)
 	for reply.Status != loadbalancerrpc.OK {
 		//if master server is still busy
+		fmt.Println(reply.Status)
 		fmt.Println("retrying to connect")
 		time.Sleep(1000 * time.Millisecond)
 		err = pacmanServer.masterConn.Call("LoadBalancer.RegisterServer", args, &reply)
-		if err != nil {
-			return nil, err
-		}
+		fmt.Println(err)
 	}
 
 	pacmanServer.nodes = reply.Servers
