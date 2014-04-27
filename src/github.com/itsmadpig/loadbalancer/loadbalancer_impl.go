@@ -10,11 +10,15 @@ import (
 )
 
 type loadBalancer struct {
-	hostPort        string
-	serverHostPorts []string
-	numCurrentNodes int
-	nodes           []loadbalancerrpc.Node
-	numOKs          int
+	hostPort         string
+	serverHostPorts  []string
+	numCurrentNodes  int
+	nodes            []loadbalancerrpc.Node
+	nodesClientNum   []int
+	nodesFailed      []bool
+	nodesFailedNumer int
+
+	numOKs int
 }
 
 func NewLoadBalancer(hostPort string) (LoadBalancer, error) {
@@ -22,6 +26,9 @@ func NewLoadBalancer(hostPort string) (LoadBalancer, error) {
 	loadBalancer.hostPort = hostPort
 	loadBalancer.numCurrentNodes = 0
 	loadBalancer.nodes = make([]loadbalancerrpc.Node, loadbalancerrpc.InitCliNum)
+	loadBalancer.nodesClientNum = make([]int, loadbalancerrpc.InitCliNum)
+	loadBalancer.nodesFailed = make([]bool, loadbalancerrpc.InitCliNum)
+	loadBalancer.nodesFailedNumer = 0
 	loadBalancer.numOKs = 0
 
 	listener, err := net.Listen("tcp", hostPort)
@@ -41,17 +48,69 @@ func NewLoadBalancer(hostPort string) (LoadBalancer, error) {
 }
 
 func (lb *loadBalancer) RouteToServer(args *loadbalancerrpc.RouteArgs, reply *loadbalancerrpc.RouteReply) error {
+	pack := new(loadbalancerrpc.RouteReply)
+	if lb.nodesFailedNumer > (loadbalancerrpc.InitCliNum / 2) {
+		//if most servers already failed
+		pack.Status = loadbalancerrpc.MOSTFAIL
+		*reply = *pack
+		return nil
+	}
+	if (loadbalancerrpc.InitCliNum == lb.numCurrentNodes) && (lb.numOKs == loadbalancerrpc.InitCliNum) {
+		//if most servers not failed and servers ready
+		pack.Status = loadbalancerrpc.OK
+	} else {
+		pack.Status = loadbalancerrpc.NotReady
+		*reply = *pack
+		return nil
+	}
+
+	lowestNum := -1
+	lowestIdx := -1
+	i := 0
 	if args.Attempt == loadbalancerrpc.INIT {
 		//first time connecting
+		for i = 0; i < loadbalancerrpc.InitCliNum; i++ {
+			if (lb.nodesFailed[i] == false) && (lowestNum == -1 || lb.nodesClientNum[i] < lowestNum) {
+				//if server hasn't failed and (first lowest or next is smaller)
+				lowestNum = lb.nodesClientNum[i]
+				lowestIdx = i
+			}
+		}
+		if lowestIdx == -1 {
+			return errors.New("shouldn't reach here")
+		}
+		pack.HostPort = lb.nodes[lowestIdx].HostPort
+		*reply = *pack
+		return nil
+	} else if args.Attempt == loadbalancerrpc.RETRY {
+		//second time connecting
+		for i = 0; i < loadbalancerrpc.InitCliNum; i++ {
+			if lb.nodes[i].HostPort == args.HostPort {
+				if lb.nodesFailed[i] == false {
+					lb.nodesFailed[i] = true
+					lb.nodesFailedNumer++
+				}
+			} else {
+				if (lb.nodesFailed[i] == false) && (lowestNum == -1 || lb.nodesClientNum[i] < lowestNum) {
+					//if server hasn't failed and (first lowest or next is smaller)
+					lowestNum = lb.nodesClientNum[i]
+					lowestIdx = i
+				}
+			}
+
+		}
+		if lowestIdx == -1 {
+			return errors.New("shouldn't reach here")
+		}
+		pack.HostPort = lb.nodes[lowestIdx].HostPort
+		*reply = *pack
+		return nil
 
 	} else {
-		//second time connecting
+		pack.Status = loadbalancerrpc.MOSTFAIL
+		*reply = *pack
+		return errors.New("routeToServer attempt number invalid")
 	}
-	pack := new(loadbalancerrpc.RouteReply)
-	pack.Status = loadbalancerrpc.OK
-	pack.HostPort = "localhost:9009"
-	*reply = *pack
-	return nil
 
 }
 
