@@ -2,18 +2,30 @@
 
 package paxos
 
-type Paxos struct {
-	ID          int
-	sequence    int
-	minProposal int
-	value       string
+type paxos struct {
+	ID                   int
+	sequence             int
+	minProposal          int
+	value                string
+	masterServerHostPort string
+	myHostPort
 }
 
-func NewPaxos(master) (Paxos, error) {
-	paxos := new(Paxos)
+func NewPaxos(masterServerHostPort, myHostPort string, ID int) (Paxos, error) {
+	paxos := new(paxos)
 	paxos.minProposal = 0
-	value = ""
+	paxos.value = ""
+	paxos.ID = ID
+	paxos.masterServerHostPort = masterServerHostPort
 
+	err = rpc.RegisterName("Paxos", paxosrpc.Wrap(paxos))
+	if err != nil {
+		return nil, err
+	}
+
+	//dial all other paxos and create a list of them to call.
+
+	return paxos, nil
 }
 
 func (pax *Paxos) Prepare(number int) (int, string) {
