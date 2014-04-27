@@ -1,5 +1,10 @@
 package paxosrpc
 
+const (
+	REJECT = iota //0
+	OK     = iota //1
+)
+
 type PrepareArgs struct {
 	ProposalNumber int
 }
@@ -7,6 +12,7 @@ type PrepareArgs struct {
 type PrepareReply struct {
 	Value            string
 	ProposalAwaiting int
+	Status           int
 }
 
 type AcceptArgs struct {
