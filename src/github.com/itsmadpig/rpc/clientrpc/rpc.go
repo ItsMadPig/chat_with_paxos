@@ -2,7 +2,6 @@ package clientrpc
 
 type RemotePacClient interface {
 	//put methods here
-
 }
 
 type PacClient struct {

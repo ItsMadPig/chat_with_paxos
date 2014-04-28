@@ -18,3 +18,11 @@ type TempReply struct {
 	HostPort string
 	Status   int
 }
+
+type MoveArgs struct {
+	Direction string
+}
+
+type MoveReply struct {
+	Direction string
+}

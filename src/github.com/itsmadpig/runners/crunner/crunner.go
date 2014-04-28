@@ -4,12 +4,12 @@ import (
 	crand "crypto/rand"
 	"flag"
 	"fmt"
+	"github.com/itsmadpig/client"
 	"log"
 	"math"
 	"math/big"
 	"math/rand"
-
-	"github.com/itsmadpig/client"
+	"time"
 )
 
 const defaultPort = 9009
@@ -41,12 +41,23 @@ func main() {
 	}
 
 	// Create and start the StorageServer.
-	_, err := client.NewPacClient(*masterHostPort, *port)
+	client, err := client.NewPacClient(*masterHostPort, *port)
 	if err != nil {
 		log.Fatalln("Failed to create client:", err)
 	}
 	// Run the storage server forever.
 	fmt.Println("masterHostPort=", masterHostPort)
 	fmt.Println("port=", port)
+
+	client.MakeMove("up")
+	fmt.Println("sleeping..")
+	time.Sleep(time.Second * 5)
+	client.MakeMove("down")
+	fmt.Println("sleeping again..")
+	time.Sleep(time.Second * 5)
+	client.MakeMove("left")
+	fmt.Println("sleeping again..")
+	time.Sleep(time.Second * 5)
+	client.MakeMove("right")
 	select {}
 }

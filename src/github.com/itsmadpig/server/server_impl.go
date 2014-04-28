@@ -76,3 +76,13 @@ func (cl *pacmanServer) Temp(args *serverrpc.TempArgs, reply *serverrpc.TempRepl
 	fmt.Println("HI")
 	return nil
 }
+
+func (cl *pacmanServer) MakeMove(args *serverrpc.MoveArgs, reply *serverrpc.MoveReply) error {
+	direction := args.Direction
+	fmt.Println("server got : ", direction)
+	pack := new(serverrpc.MoveReply)
+	pack.Direction = direction
+	*reply = *pack
+	return nil
+
+}

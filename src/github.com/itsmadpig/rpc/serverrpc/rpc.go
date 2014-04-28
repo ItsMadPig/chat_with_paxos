@@ -3,6 +3,7 @@ package serverrpc
 type RemoteServer interface {
 	//put methods here
 	Temp(*TempArgs, *TempReply) error
+	MakeMove(*MoveArgs, *MoveReply) error
 }
 
 type PacmanServer struct {
