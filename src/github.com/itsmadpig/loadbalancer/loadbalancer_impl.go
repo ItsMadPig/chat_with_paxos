@@ -10,13 +10,13 @@ import (
 )
 
 type loadBalancer struct {
-	hostPort         string
-	serverHostPorts  []string
-	numCurrentNodes  int
-	nodes            []loadbalancerrpc.Node
-	nodesClientNum   []int
-	nodesFailed      []bool
-	nodesFailedNumer int
+	hostPort          string
+	serverHostPorts   []string
+	numCurrentNodes   int
+	nodes             []loadbalancerrpc.Node
+	nodesClientNum    []int
+	nodesFailed       []bool
+	nodesFailedNumber int
 
 	numOKs int
 }
@@ -28,7 +28,7 @@ func NewLoadBalancer(hostPort string) (LoadBalancer, error) {
 	loadBalancer.nodes = make([]loadbalancerrpc.Node, loadbalancerrpc.InitCliNum)
 	loadBalancer.nodesClientNum = make([]int, loadbalancerrpc.InitCliNum)
 	loadBalancer.nodesFailed = make([]bool, loadbalancerrpc.InitCliNum)
-	loadBalancer.nodesFailedNumer = 0
+	loadBalancer.nodesFailedNumber = 0
 	loadBalancer.numOKs = 0
 
 	listener, err := net.Listen("tcp", hostPort)
@@ -48,8 +48,9 @@ func NewLoadBalancer(hostPort string) (LoadBalancer, error) {
 }
 
 func (lb *loadBalancer) RouteToServer(args *loadbalancerrpc.RouteArgs, reply *loadbalancerrpc.RouteReply) error {
+	fmt.Println(lb.nodesFailedNumber)
 	pack := new(loadbalancerrpc.RouteReply)
-	if lb.nodesFailedNumer > (loadbalancerrpc.InitCliNum / 2) {
+	if lb.nodesFailedNumber > (loadbalancerrpc.InitCliNum / 2) {
 		//if most servers already failed
 		pack.Status = loadbalancerrpc.MOSTFAIL
 		*reply = *pack
@@ -88,7 +89,13 @@ func (lb *loadBalancer) RouteToServer(args *loadbalancerrpc.RouteArgs, reply *lo
 			if lb.nodes[i].HostPort == args.HostPort {
 				if lb.nodesFailed[i] == false {
 					lb.nodesFailed[i] = true
-					lb.nodesFailedNumer++
+					lb.nodesFailedNumber++
+					if lb.nodesFailedNumber > (loadbalancerrpc.InitCliNum / 2) {
+						//if most servers already failed
+						pack.Status = loadbalancerrpc.MOSTFAIL
+						*reply = *pack
+						return nil
+					}
 				}
 			} else {
 				if (lb.nodesFailed[i] == false) && (lowestNum == -1 || lb.nodesClientNum[i] < lowestNum) {
