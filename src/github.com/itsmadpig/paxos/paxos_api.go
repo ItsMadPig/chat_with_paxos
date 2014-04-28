@@ -1,6 +1,6 @@
 package paxos
 
-import "github.com/itsmadpig/rpc"
+import "github.com/itsmadpig/rpc/paxosrpc"
 
 type Paxos interface {
 	Prepare(*paxosrpc.PrepareArgs, *paxosrpc.PrepareReply) error

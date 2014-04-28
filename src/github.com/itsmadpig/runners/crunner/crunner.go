@@ -49,15 +49,19 @@ func main() {
 	fmt.Println("masterHostPort=", masterHostPort)
 	fmt.Println("port=", port)
 
-	client.MakeMove("up")
+	err = client.MakeMove("up")
+	if err != nil {
+		fmt.Println("no more servers")
+		return
+	}
+
 	fmt.Println("sleeping..")
 	time.Sleep(time.Second * 5)
-	client.MakeMove("down")
+	err = client.MakeMove("down")
 	fmt.Println("sleeping again..")
 	time.Sleep(time.Second * 5)
-	client.MakeMove("left")
+	err = client.MakeMove("left")
 	fmt.Println("sleeping again..")
 	time.Sleep(time.Second * 5)
-	client.MakeMove("right")
-	select {}
+	err = client.MakeMove("right")
 }

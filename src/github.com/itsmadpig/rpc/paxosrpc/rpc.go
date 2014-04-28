@@ -4,7 +4,7 @@ type RemotePaxos interface {
 	//put methods here
 	Prepare(*PrepareArgs, *PrepareReply)
 	Accept(*AcceptArgs, *AcceptReply)
-	Commit(*paxosrpc.CommitArgs, *paxosrpc.CommitReply) error
+	Commit(*CommitArgs, *CommitReply)
 }
 
 type Paxos struct {

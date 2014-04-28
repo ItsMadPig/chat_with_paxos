@@ -3,7 +3,6 @@ package server
 import (
 	//"errors"
 	"fmt"
-	"github.com/itsmadpig/paxos"
 	"github.com/itsmadpig/rpc/loadbalancerrpc"
 	"github.com/itsmadpig/rpc/serverrpc"
 	"net"
@@ -18,7 +17,7 @@ type pacmanServer struct {
 	selfNode             *loadbalancerrpc.Node  //node of itself
 	nodes                []loadbalancerrpc.Node // map of all nodes
 	masterConn           *rpc.Client            //connection to master
-	paxos                paxos.Paxos
+
 }
 
 //two types of disconnection
