@@ -20,6 +20,7 @@ type pacmanServer struct {
 	nodes                []loadbalancerrpc.Node // map of all nodes
 	masterConn           *rpc.Client            //connection to master
 	paxos                paxos.Paxos
+	ID                   int
 }
 
 //two types of disconnection
@@ -33,11 +34,12 @@ type pacmanServer struct {
 
 //if masterServerHostPort isn't empty, then it's a masterclient,
 //else it's a slaveclient to start with
-func NewServer(masterServerHostPort string, port int, nodeID uint32) (PacmanServer, error) {
+func NewServer(masterServerHostPort string, port int, nodeID int) (PacmanServer, error) {
 	pacmanServer := new(pacmanServer)
 	pacmanServer.selfNode = new(loadbalancerrpc.Node)
 	pacmanServer.nodes = make([]loadbalancerrpc.Node, loadbalancerrpc.InitCliNum)
 	pacmanServer.masterServerHostPort = masterServerHostPort
+	pacmanServer.ID = nodeID
 	//if it's the slave client
 	conn, err := rpc.DialHTTP("tcp", masterServerHostPort)
 	if err != nil {
@@ -77,7 +79,7 @@ func NewServer(masterServerHostPort string, port int, nodeID uint32) (PacmanServ
 	rpc.HandleHTTP()
 	go http.Serve(listener, nil)
 
-	pacmanServer.paxos, err = paxos.NewPaxos(net.JoinHostPort("localhost", strconv.Itoa(port)), 0, hostPorts)
+	pacmanServer.paxos, err = paxos.NewPaxos(net.JoinHostPort("localhost", strconv.Itoa(port)), nodeID, hostPorts)
 	if err != nil {
 		return nil, err
 	}

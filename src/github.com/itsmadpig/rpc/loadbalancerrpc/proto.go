@@ -25,7 +25,7 @@ type RouteReply struct {
 
 type Node struct {
 	HostPort string // The host:port address of the storage server node.
-	NodeID   uint32 // The ID identifying this storage server node.
+	NodeID   int    // The ID identifying this storage server node.
 }
 
 type RegisterArgs struct {

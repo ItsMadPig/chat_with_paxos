@@ -1,13 +1,9 @@
 package main
 
 import (
-	crand "crypto/rand"
 	"flag"
 	"fmt"
 	"log"
-	"math"
-	"math/big"
-	"math/rand"
 
 	"github.com/itsmadpig/server"
 )
@@ -17,7 +13,7 @@ const defaultPort = 9009
 var (
 	port           = flag.Int("port", defaultPort, "port number to listen on")
 	masterHostPort = flag.String("master", "", "master storage server host port (if non-empty then this storage server is a slave)")
-	nodeID         = flag.Uint("id", 0, "a 32-bit unsigned node ID to use for consistent hashing")
+	nodeID         = flag.Int("id", 0, "a unique integer")
 )
 
 func init() {
@@ -26,22 +22,18 @@ func init() {
 
 func main() {
 	flag.Parse()
-	if *masterHostPort == "" && *port == 0 {
+	if *masterHostPort == "" {
 		// If masterHostPort string is empty, then this storage server is the master.
-		*port = defaultPort
 		*masterHostPort = "localhost:8009"
+	}
+	if *port == 0 {
+		*port = defaultPort
 	}
 
 	// If nodeID is 0, then assign a random 32-bit integer instead.
-	randID := uint32(*nodeID)
-	if randID == 0 {
-		randint, _ := crand.Int(crand.Reader, big.NewInt(math.MaxInt64))
-		rand.Seed(randint.Int64())
-		randID = rand.Uint32()
-	}
 
 	// Create and start the StorageServer.
-	_, err := server.NewServer(*masterHostPort, *port, randID)
+	_, err := server.NewServer(*masterHostPort, *port, *nodeID)
 	if err != nil {
 		log.Fatalln("Failed to create storage server:", err)
 	}
