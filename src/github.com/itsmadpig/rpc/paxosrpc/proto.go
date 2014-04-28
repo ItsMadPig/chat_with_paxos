@@ -30,4 +30,5 @@ type CommitArgs struct {
 }
 
 type CommitReply struct {
+	Value string
 }

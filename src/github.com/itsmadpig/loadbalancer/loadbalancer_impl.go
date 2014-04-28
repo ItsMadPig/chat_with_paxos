@@ -80,6 +80,7 @@ func (lb *loadBalancer) RouteToServer(args *loadbalancerrpc.RouteArgs, reply *lo
 		if lowestIdx == -1 {
 			return errors.New("shouldn't reach here")
 		}
+		lb.nodesClientNum[lowestIdx] += 1
 		pack.HostPort = lb.nodes[lowestIdx].HostPort
 		*reply = *pack
 		return nil
@@ -109,6 +110,7 @@ func (lb *loadBalancer) RouteToServer(args *loadbalancerrpc.RouteArgs, reply *lo
 		if lowestIdx == -1 {
 			return errors.New("shouldn't reach here")
 		}
+		lb.nodesClientNum[lowestIdx] += 1
 		pack.HostPort = lb.nodes[lowestIdx].HostPort
 		*reply = *pack
 		return nil
