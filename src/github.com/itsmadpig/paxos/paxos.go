@@ -28,7 +28,6 @@ type paxos struct {
 }
 
 func NewPaxos(myHostPort string, ID int, serverHostPorts []string) (Paxos, error) {
-	fmt.Println("starting Paxos")
 	thisPaxos := new(paxos)
 	thisPaxos.ID = ID
 	thisPaxos.round = 0
@@ -38,14 +37,11 @@ func NewPaxos(myHostPort string, ID int, serverHostPorts []string) (Paxos, error
 	thisPaxos.myHostPort = myHostPort
 	thisPaxos.serverHostPorts = serverHostPorts
 	thisPaxos.logs = make(map[int]string)
-	fmt.Println("making relations")
-	fmt.Println("myHostPort:", myHostPort)
 
 	err := rpc.RegisterName("Paxos", paxosrpc.Wrap(thisPaxos))
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("registered paxos")
 	//dial all other paxos and create a list of them to call.
 	err = thisPaxos.DialAllServers()
 	for i := 0; i < 5; i++ {
@@ -126,8 +122,22 @@ func (pax *paxos) Accept(args *paxosrpc.AcceptArgs, reply *paxosrpc.AcceptReply)
 }
 
 func (pax *paxos) Commit(args *paxosrpc.CommitArgs, reply *paxosrpc.CommitReply) error {
+	fmt.Println("Commit Called")
+	if pax.value != args.Value {
+		fmt.Println("wrong commit")
+		return nil
+	}
+	pax.logs[pax.acceptedProposal] = pax.value
 	pax.proposalNum = pax.proposalNum + 10
 	fmt.Println(args.Value)
+	return nil
+}
+
+func (pax *paxos) GetLogs(args *paxosrpc.GetArgs, reply *paxosrpc.GetReply) error {
+
+	pack := new(paxosrpc.GetReply)
+	pack.Logs = pax.logs
+	*reply = *pack
 	return nil
 }
 

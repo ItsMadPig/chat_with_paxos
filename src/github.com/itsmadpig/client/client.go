@@ -16,12 +16,14 @@ type pacClient struct {
 	loadBalancer   *rpc.Client
 	serverHostPort string
 	ID             string
+	logs           map[int]string
 }
 
 func NewPacClient(loadHostPort string, port, ID int) (PacClient, error) {
 	pac := new(pacClient)
 	pac.loadHostPort = loadHostPort
 	pac.ID = strconv.Itoa(ID)
+	pac.logs = make(map[int]string)
 	cli, err := rpc.DialHTTP("tcp", loadHostPort)
 	if err != nil {
 		return nil, err
@@ -67,11 +69,22 @@ func NewPacClient(loadHostPort string, port, ID int) (PacClient, error) {
 			return nil, errors.New("reconnect fail, most servers dead")
 		}
 	}
+	pac.GetLogs()
+	go pac.RefreshTimer()
 	return pac, nil
 }
 
 //if fail connection, do RouteToServer with failed HostPort
-//if all fail, stop client
+//if all fail, stop client\
+
+func (pc *pacClient) RefreshTimer() {
+	for {
+		select {
+		case _ = <-time.After(time.Second):
+			pc.GetLogs()
+		}
+	}
+}
 
 func (pc *pacClient) ReconnectToLB() error {
 	fmt.Println("reconnect called")
@@ -101,6 +114,37 @@ func (pc *pacClient) ReconnectToLB() error {
 	pc.serverHostPort = reply.HostPort
 	pc.serverConn = serverConn
 	return nil
+}
+
+func (pc *pacClient) isNewMessage(newMap map[int]string) bool {
+	for index, value := range newMap {
+		thisVal, ok := pc.logs[index]
+		if !ok {
+			pc.logs = newMap
+			return true
+		}
+		if value != thisVal {
+			pc.logs = newMap
+			return true
+		}
+	}
+	return false
+}
+
+func (pc *pacClient) GetLogs() {
+
+	reply := new(serverrpc.GetReply)
+	args := new(serverrpc.GetArgs)
+	pc.serverConn.Call("PacmanServer.GetLogs", args, &reply)
+	if pc.isNewMessage(reply.Logs) == false {
+		return
+	}
+	fmt.Println("**************************SCREEN*************************")
+	for _, value := range pc.logs {
+		fmt.Println(value)
+	}
+	fmt.Println("***********************END OF SCREEN ********************")
+	fmt.Print("Message : ")
 }
 
 func (pc *pacClient) MakeMove(direction string) error {

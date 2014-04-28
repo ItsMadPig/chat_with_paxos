@@ -32,3 +32,11 @@ type CommitArgs struct {
 type CommitReply struct {
 	Value string
 }
+
+type GetArgs struct {
+	ID string
+}
+
+type GetReply struct {
+	Logs map[int]string
+}

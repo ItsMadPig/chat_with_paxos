@@ -3,10 +3,10 @@ package server
 import (
 	//"errors"
 	"fmt"
-	"github.com/itsmadpig/rpc/loadbalancerrpc"
-	"github.com/itsmadpig/rpc/serverrpc"
-	//"githum.com/itsmadpig/rpc/paxosrpc"
 	"github.com/itsmadpig/paxos"
+	"github.com/itsmadpig/rpc/loadbalancerrpc"
+	"github.com/itsmadpig/rpc/paxosrpc"
+	"github.com/itsmadpig/rpc/serverrpc"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -87,8 +87,14 @@ func NewServer(masterServerHostPort string, port int, nodeID int) (PacmanServer,
 
 }
 
-func (cl *pacmanServer) Temp(args *serverrpc.TempArgs, reply *serverrpc.TempReply) error {
-	fmt.Println("HI")
+func (cl *pacmanServer) GetLogs(args *serverrpc.GetArgs, reply *serverrpc.GetReply) error {
+	thisReply := new(paxosrpc.GetReply)
+	arg := new(paxosrpc.GetArgs)
+	arg.ID = args.ID
+	cl.paxos.GetLogs(arg, thisReply)
+	pack := new(serverrpc.GetReply)
+	pack.Logs = thisReply.Logs
+	*reply = *pack
 	return nil
 }
 

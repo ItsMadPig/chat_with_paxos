@@ -26,3 +26,11 @@ type MoveArgs struct {
 type MoveReply struct {
 	Direction string
 }
+
+type GetArgs struct {
+	ID string
+}
+
+type GetReply struct {
+	Logs map[int]string
+}
