@@ -6,6 +6,7 @@ import (
 	"github.com/itsmadpig/paxos"
 	"github.com/itsmadpig/rpc/loadbalancerrpc"
 	"github.com/itsmadpig/rpc/serverrpc"
+	"githum.com/itsmadpig/rpc/paxosrpc"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -58,6 +59,12 @@ func NewServer(masterServerHostPort string, port int, nodeID uint32) (PacmanServ
 	}
 
 	pacmanServer.nodes = reply.Servers
+	hostPorts := make([]string, len(pacmanServer.nodes))
+	i := 0
+	for _, node := range pacmanServer.nodes {
+		hostPorts[i] = node.HostPort
+		i++
+	}
 
 	listener, err := net.Listen("tcp", net.JoinHostPort("localhost", strconv.Itoa(port)))
 	if err != nil {
@@ -70,6 +77,10 @@ func NewServer(masterServerHostPort string, port int, nodeID uint32) (PacmanServ
 	rpc.HandleHTTP()
 	go http.Serve(listener, nil)
 
+	pacmanServer.paxos, err = paxos.NewPaxos(net.JoinHostPort("localhost", strconv.Itoa(port)), 0, hostPorts)
+	if err != nil {
+		return nil, err
+	}
 	return pacmanServer, nil
 
 }
@@ -82,6 +93,7 @@ func (cl *pacmanServer) Temp(args *serverrpc.TempArgs, reply *serverrpc.TempRepl
 func (cl *pacmanServer) MakeMove(args *serverrpc.MoveArgs, reply *serverrpc.MoveReply) error {
 	direction := args.Direction
 	fmt.Println("server got : ", direction)
+	err := cl.paxos.RequestValue(direction)
 	pack := new(serverrpc.MoveReply)
 	pack.Direction = direction
 	*reply = *pack

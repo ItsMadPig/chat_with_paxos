@@ -30,7 +30,3 @@ type CommitArgs struct {
 
 type CommitReply struct {
 }
-
-type RequestArgs struct {
-	Value string
-}
