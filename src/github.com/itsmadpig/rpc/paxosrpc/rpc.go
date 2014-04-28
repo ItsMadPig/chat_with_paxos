@@ -2,9 +2,9 @@ package paxosrpc
 
 type RemotePaxos interface {
 	//put methods here
-	Accept(*AcceptArgs, *AcceptReply)
-	RequestValue(*RequestArgs)
 	Prepare(*PrepareArgs, *PrepareReply)
+	Accept(*AcceptArgs, *AcceptReply)
+	Commit(*paxosrpc.CommitArgs, *paxosrpc.CommitReply) error
 }
 
 type Paxos struct {
