@@ -107,6 +107,7 @@ func (pax *paxos) Prepare(args *paxosrpc.PrepareArgs, reply *paxosrpc.PrepareRep
 func (pax *paxos) Accept(args *paxosrpc.AcceptArgs, reply *paxosrpc.AcceptReply) error { //returns the highestSeenProposal
 	//takes in a value and an int. Checks if the int is equal to or greater than highestSeenProposal
 	//sets value if it is, and returns the min proposal = n.
+	fmt.Println("Accept Called")
 	number := args.ProposalNumber
 	pack := new(paxosrpc.AcceptReply)
 	pack.HighestSeen = pax.highestSeenProposal
@@ -125,6 +126,8 @@ func (pax *paxos) Accept(args *paxosrpc.AcceptArgs, reply *paxosrpc.AcceptReply)
 }
 
 func (pax *paxos) Commit(args *paxosrpc.CommitArgs, reply *paxosrpc.CommitReply) error {
+	pax.proposalNum = pax.proposalNum + 10
+	fmt.Println(args.Value)
 	return nil
 }
 
@@ -137,6 +140,7 @@ func (pax *paxos) RequestValue(direction string) error {
 	//else start requestValue again.
 	fmt.Println("request Value called")
 	proposalNum := pax.proposalNum + 10 //
+	fmt.Println("proposal Num : ", proposalNum)
 	pax.proposalNum = int(math.Max(float64(pax.highestSeenProposal), float64(pax.proposalNum)))
 	majority := ((len(pax.paxosServers) + 1) / 2) + 1
 
@@ -167,28 +171,7 @@ func (pax *paxos) RequestValue(direction string) error {
 		}
 	}
 
-	/*
-		propChanList := make([]*rpc.Call, len(pax.paxosServers))
-		for cli := range pax.paxosServers {
-			propChanList[i] = new(rpc.Call)
-			propChanList[i] = cli.Go("Paxos.Prepare", propArgument, &propReply[i], nil) //it blocks, if doesn't return for some time, false
-			i++
-		}
-
-		count := 0
-		for count < i {
-			select {
-			case _ = <-propChanList[count].Done:
-				count++
-				if count >= i {
-					break
-				}
-			case _ = <-time.After(3 * time.Second): //how does this work?
-				break
-			}
-		}
-	*/
-
+	propReply[i] = new(paxosrpc.PrepareReply)
 	pax.Prepare(propArgument, propReply[i]) //not sure if stored in reply
 	count++
 
@@ -204,19 +187,22 @@ func (pax *paxos) RequestValue(direction string) error {
 	tempValue := ""
 	for _, rep := range propReply {
 		//can rep be null?
-		if rep.Status == paxosrpc.OK { //check this algo
-			propAccepted++
-			if rep.HighestAcceptedNum > tempHighest { /////////////////// && empty string?
-				tempValue = rep.Value
-				tempHighest = rep.HighestAcceptedNum
+		if rep != nil {
+			if rep.Status == paxosrpc.OK { //check this algo
+				propAccepted++
+				if rep.HighestAcceptedNum > tempHighest { /////////////////// && empty string?
+					tempValue = rep.Value
+					tempHighest = rep.HighestAcceptedNum
+				}
 			}
 		}
+
 	}
 	value := ""
-	if tempValue == "" {
-		value = direction
-	} else {
+	if tempValue != "" && tempHighest >= proposalNum {
 		value = tempValue
+	} else {
+		value = direction
 	}
 
 	if propAccepted < majority {
@@ -240,7 +226,8 @@ func (pax *paxos) RequestValue(direction string) error {
 			cli.Go("Paxos.Accept", acceptArgument, &acceptReply[k], acceptChan) //it blocks, if doesn't return for some time, false
 			k++
 		}
-
+		acceptReply[k] = new(paxosrpc.AcceptReply)
+		pax.Accept(acceptArgument, acceptReply[k])
 		acceptCount := 0
 		for acceptCount < k {
 			select {
@@ -253,20 +240,29 @@ func (pax *paxos) RequestValue(direction string) error {
 				break
 			}
 		}
-		acceptCount++
-
 		//
-		//acceptAccepted := 0
+		acceptAccepted := 0
 		for _, rep := range acceptReply {
 			//can rep be null?
-			if rep.HighestSeen > proposalNum {
-				//increment proposalNum because trying to get other servers to know the rep.highestseen (done at start)
-				time.Sleep(3 * time.Second)
-				return pax.RequestValue(direction)
+			if rep != nil {
+				if rep.Status == paxosrpc.OK {
+					acceptAccepted++
+				} else {
+					//increment proposalNum because trying to get other servers to know the rep.highestseen (done at start)
+					time.Sleep(3 * time.Second)
+					return pax.RequestValue(direction)
+				}
 			}
-		}
-		if acceptCount >= majority {
 
+		}
+		if acceptAccepted >= majority {
+			commitArg := new(paxosrpc.CommitArgs)
+			commitArg.Value = value
+			for _, cli := range pax.paxosServers {
+				acceptReply[k] = new(paxosrpc.AcceptReply)
+				cli.Go("Paxos.Commit", commitArg, nil, nil) //it blocks, if doesn't return for some time, false
+			}
+			pax.Commit(commitArg, nil)
 		} else {
 			time.Sleep(3 * time.Second)
 			return pax.RequestValue(direction)

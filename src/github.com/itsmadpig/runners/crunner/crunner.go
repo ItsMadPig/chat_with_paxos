@@ -15,6 +15,7 @@ const defaultPort = 9009
 
 var (
 	port           = flag.Int("port", defaultPort, "port number to listen on")
+	port2          = flag.Int("port2", defaultPort, "port number to listen on")
 	masterHostPort = flag.String("master", "", "master storage server host port (if non-empty then this storage server is a slave)")
 	nodeID         = flag.Uint("id", 0, "a 32-bit unsigned node ID to use for consistent hashing")
 )
@@ -40,7 +41,7 @@ func main() {
 	}
 
 	// Create and start the StorageServer.
-	client, err := client.NewPacClient(*masterHostPort, *port)
+	client1, err := client.NewPacClient(*masterHostPort, *port)
 	if err != nil {
 		log.Fatalln("Failed to create client:", err)
 	}
@@ -48,9 +49,11 @@ func main() {
 	fmt.Println("masterHostPort=", masterHostPort)
 	fmt.Println("port=", port)
 
-	err = client.MakeMove("up")
+	client2, err := client.NewPacClient(*masterHostPort, *port2)
 	if err != nil {
-		return
+		log.Fatalln("Failed to create client:", err)
 	}
-	select {}
+	err = client1.MakeMove("up")
+	err = client2.MakeMove("down")
+
 }

@@ -26,6 +26,7 @@ type AcceptReply struct {
 }
 
 type CommitArgs struct {
+	Value string
 }
 
 type CommitReply struct {
