@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"github.com/itsmadpig/rpc/loadbalancerrpc"
 	"github.com/itsmadpig/rpc/serverrpc"
-	"githum.com/itsmadpig/rpc/paxosrpc"
+	//"githum.com/itsmadpig/rpc/paxosrpc"
+	"github.com/itsmadpig/paxos"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -18,7 +19,7 @@ type pacmanServer struct {
 	selfNode             *loadbalancerrpc.Node  //node of itself
 	nodes                []loadbalancerrpc.Node // map of all nodes
 	masterConn           *rpc.Client            //connection to master
-
+	paxos                paxos.Paxos
 }
 
 //two types of disconnection
@@ -93,6 +94,9 @@ func (cl *pacmanServer) MakeMove(args *serverrpc.MoveArgs, reply *serverrpc.Move
 	direction := args.Direction
 	fmt.Println("server got : ", direction)
 	err := cl.paxos.RequestValue(direction)
+	if err != nil {
+		fmt.Println("request error")
+	}
 	pack := new(serverrpc.MoveReply)
 	pack.Direction = direction
 	*reply = *pack

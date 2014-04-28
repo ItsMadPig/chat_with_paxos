@@ -88,7 +88,7 @@ func (pax *paxos) DialAllServers() error {
 func (pax *paxos) Prepare(args *paxosrpc.PrepareArgs, reply *paxosrpc.PrepareReply) error {
 	//takes in number and checks if number is higher than highestSeenProposal
 	//if so highestSeenProposal = n. returns acceptedProposal number.
-
+	fmt.Println("prepare Called")
 	number := args.ProposalNumber
 	pack := new(paxosrpc.PrepareReply)
 	if number >= pax.highestSeenProposal { /////////////////////////check
@@ -135,7 +135,7 @@ func (pax *paxos) RequestValue(direction string) error {
 	//if value is empty, and mojority replied okay, send out accepts.
 	//if highestSeenProposal is same as yours, your value is commited and you can return,
 	//else start requestValue again.
-
+	fmt.Println("request Value called")
 	proposalNum := pax.proposalNum + 10 //
 	pax.proposalNum = int(math.Max(float64(pax.highestSeenProposal), float64(pax.proposalNum)))
 	majority := ((len(pax.paxosServers) + 1) / 2) + 1

@@ -9,7 +9,6 @@ import (
 	"math"
 	"math/big"
 	"math/rand"
-	"time"
 )
 
 const defaultPort = 9009
@@ -51,17 +50,7 @@ func main() {
 
 	err = client.MakeMove("up")
 	if err != nil {
-		fmt.Println("no more servers")
 		return
 	}
-
-	fmt.Println("sleeping..")
-	time.Sleep(time.Second * 5)
-	err = client.MakeMove("down")
-	fmt.Println("sleeping again..")
-	time.Sleep(time.Second * 5)
-	err = client.MakeMove("left")
-	fmt.Println("sleeping again..")
-	time.Sleep(time.Second * 5)
-	err = client.MakeMove("right")
+	select {}
 }
