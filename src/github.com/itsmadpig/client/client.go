@@ -6,6 +6,7 @@ import (
 	"github.com/itsmadpig/rpc/loadbalancerrpc"
 	"github.com/itsmadpig/rpc/serverrpc"
 	"net/rpc"
+	"strconv"
 	"time"
 )
 
@@ -14,12 +15,13 @@ type pacClient struct {
 	loadHostPort   string
 	loadBalancer   *rpc.Client
 	serverHostPort string
+	ID             string
 }
 
-func NewPacClient(loadHostPort string, port int) (PacClient, error) {
+func NewPacClient(loadHostPort string, port, ID int) (PacClient, error) {
 	pac := new(pacClient)
 	pac.loadHostPort = loadHostPort
-
+	pac.ID = strconv.Itoa(ID)
 	cli, err := rpc.DialHTTP("tcp", loadHostPort)
 	if err != nil {
 		return nil, err
@@ -102,11 +104,10 @@ func (pc *pacClient) ReconnectToLB() error {
 }
 
 func (pc *pacClient) MakeMove(direction string) error {
-	fmt.Print("Trying to go ")
-	fmt.Println(direction)
+	fmt.Println(pc.ID, ":", direction)
 	args := new(serverrpc.MoveArgs)
 	reply := new(serverrpc.MoveReply)
-	args.Direction = direction
+	args.Direction = pc.ID + ":" + direction
 	err := pc.serverConn.Call("PacmanServer.MakeMove", args, &reply)
 	if err != nil {
 		err = pc.ReconnectToLB()
