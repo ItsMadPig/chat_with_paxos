@@ -30,7 +30,6 @@ type paxos struct {
 }
 
 func NewPaxos(myHostPort string, ID int, serverHostPorts []string) (Paxos, error) {
-	fmt.Println("starting Paxos")
 	thisPaxos := new(paxos)
 	thisPaxos.ID = ID
 	thisPaxos.currentRound = 0
@@ -45,7 +44,6 @@ func NewPaxos(myHostPort string, ID int, serverHostPorts []string) (Paxos, error
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("registered paxos")
 	//dial all other paxos and create a list of them to call.
 	err = thisPaxos.DialAllServers()
 	for i := 0; i < 5; i++ {
@@ -136,11 +134,24 @@ func (pax *paxos) Accept(args *paxosrpc.AcceptArgs, reply *paxosrpc.AcceptReply)
 
 func (pax *paxos) Commit(args *paxosrpc.CommitArgs, reply *paxosrpc.CommitReply) error {
 	if pax.highestRound < args.Round {
-		pax.logs[args.Round] = args.Value
 		pax.highestRound = args.Round
 	}
 	//pax.proposalNum = pax.proposalNum + 10
+	pax.logs[args.Round] = args.Value
+	pax.acceptedProposal = 0
+	pax.value = ""
+	pax.proposalNum = 0
+	pax.highestSeenProposal = 0
+	pax.currentRound = pax.highestRound
 	fmt.Println(args.Value)
+	return nil
+}
+
+func (pax *paxos) GetLogs(args *paxosrpc.GetArgs, reply *paxosrpc.GetReply) error {
+
+	pack := new(paxosrpc.GetReply)
+	pack.Logs = pax.logs
+	*reply = *pack
 	return nil
 }
 
