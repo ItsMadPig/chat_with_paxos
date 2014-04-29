@@ -135,7 +135,13 @@ func (pc *pacClient) GetLogs() {
 
 	reply := new(serverrpc.GetReply)
 	args := new(serverrpc.GetArgs)
-	pc.serverConn.Call("PacmanServer.GetLogs", args, &reply)
+	err := pc.serverConn.Call("PacmanServer.GetLogs", args, &reply)
+	if err != nil {
+		err = pc.ReconnectToLB()
+		if err != nil {
+			fmt.Println("all servers failed.. closing down..")
+		}
+	}
 	if pc.isNewMessage(reply.Logs) == false {
 		return
 	}

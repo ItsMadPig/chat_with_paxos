@@ -84,6 +84,10 @@ func (pax *paxos) Prepare(args *paxosrpc.PrepareArgs, reply *paxosrpc.PrepareRep
 	//if so highestSeenProposal = n. returns acceptedProposal number.
 	fmt.Println("prepare Called")
 	pack := new(paxosrpc.PrepareReply)
+	fmt.Println("pax.highestRound = ", pax.highestRound)
+	fmt.Println("received round = ", args.Round)
+	fmt.Println("pax.highestSeenProposal = ", pax.highestSeenProposal)
+	fmt.Println("received ProposalNumber = ", args.ProposalNumber)
 
 	if args.Round <= pax.highestRound {
 		pack.HighestAcceptedNum = args.Round
@@ -95,10 +99,12 @@ func (pax *paxos) Prepare(args *paxosrpc.PrepareArgs, reply *paxosrpc.PrepareRep
 		pack.Value = pax.value
 		pack.HighestAcceptedNum = pax.acceptedProposal
 		pack.Status = paxosrpc.Prepareres
+		fmt.Println("Prepareres")
 	} else {
 		pack.HighestAcceptedNum = pax.highestSeenProposal
 		pack.Value = pax.value
 		pack.Status = paxosrpc.REJECT
+		fmt.Println("Reject")
 	}
 
 	*reply = *pack
@@ -192,7 +198,9 @@ func (pax *paxos) RequestValue(reqValue string) error {
 
 	propReply[i] = new(paxosrpc.PrepareReply)
 	pax.Prepare(propArgument, propReply[i]) //not sure if stored in reply
-
+	fmt.Println("value", propReply[i].Value)
+	fmt.Println("highestacceptnum", propReply[i].HighestAcceptedNum)
+	fmt.Println("status", propReply[i].Status)
 	//fix this
 	count := 0
 	for count < i {
@@ -215,15 +223,17 @@ func (pax *paxos) RequestValue(reqValue string) error {
 	tempValue := ""
 	for _, rep := range propReply {
 		//can rep be null?
-		if rep != nil {
+		if rep.Status != 0 {
 			if rep.Status == paxosrpc.OldInstance {
 				commitArgs := new(paxosrpc.CommitArgs)
 				commitArgs.Value = rep.Value
 				commitArgs.Round = rep.HighestAcceptedNum
 				pax.Commit(commitArgs, nil)
+				fmt.Println("Reach here 1")
 				return pax.RequestValue(reqValue)
 			} else if rep.Status == paxosrpc.REJECT {
 				time.Sleep(3 * time.Second)
+				fmt.Println("Reach here 2")
 				return pax.RequestValue(reqValue)
 			} else {
 				propAccepted++
@@ -282,7 +292,7 @@ func (pax *paxos) RequestValue(reqValue string) error {
 		acceptAccepted := 0
 		for _, rep := range acceptReply {
 			//can rep be null?
-			if rep != nil {
+			if rep.Status != 0 {
 				if rep.Status == paxosrpc.OK {
 					acceptAccepted++
 				} else {
