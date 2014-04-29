@@ -5,6 +5,7 @@ type RemotePaxos interface {
 	Prepare(*PrepareArgs, *PrepareReply) error
 	Accept(*AcceptArgs, *AcceptReply) error
 	Commit(*CommitArgs, *CommitReply) error
+	GetLogs(*GetArgs, *GetReply) error
 }
 
 type Paxos struct {

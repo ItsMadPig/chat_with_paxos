@@ -36,6 +36,7 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		//blocks
+
 		input, err := reader.ReadString('\n')
 		if err != nil {
 			fmt.Println("please retype string")
