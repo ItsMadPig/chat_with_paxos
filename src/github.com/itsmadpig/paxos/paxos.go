@@ -86,11 +86,11 @@ func (pax *paxos) Prepare(args *paxosrpc.PrepareArgs, reply *paxosrpc.PrepareRep
 	//if so highestSeenProposal = n. returns acceptedProposal number.
 	fmt.Println("prepare Called")
 	pack := new(paxosrpc.PrepareReply)
-	fmt.Println("pax.highestRound = ", pax.highestRound)
-	fmt.Println("received round = ", args.Round)
-	fmt.Println("pax.highestSeenProposal = ", pax.highestSeenProposal)
-	fmt.Println("received ProposalNumber = ", args.ProposalNumber)
-
+	/*	fmt.Println("pax.highestRound = ", pax.highestRound)
+		fmt.Println("received round = ", args.Round)
+		fmt.Println("pax.highestSeenProposal = ", pax.highestSeenProposal)
+		fmt.Println("received ProposalNumber = ", args.ProposalNumber)
+	*/
 	for i, hP := range pax.serverHostPorts {
 		if hP == args.HostPort {
 			cli, err := rpc.DialHTTP("tcp", hP)
@@ -212,6 +212,7 @@ func (pax *paxos) RequestValue(reqValue string) error {
 	for _, cli := range pax.paxosServers {
 		propReply[i] = new(paxosrpc.PrepareReply)
 		cli.Go("Paxos.Prepare", propArgument, propReply[i], propChan) //it blocks, if doesn't return for some time, false
+		fmt.Println("PREPARE SENT")
 		i++
 	}
 
@@ -221,11 +222,11 @@ func (pax *paxos) RequestValue(reqValue string) error {
 	fmt.Println("highestacceptnum", propReply[i].HighestAcceptedNum)
 	//fix this
 	count := 0
-	for count < i {
+	for count < i-1 {
 		select {
 		case _ = <-propChan:
 			count++
-			if count >= i {
+			if count >= i-1 {
 				break
 			}
 		case _ = <-time.After(2 * time.Second): //how does this work?
@@ -300,11 +301,11 @@ func (pax *paxos) RequestValue(reqValue string) error {
 
 		pax.Accept(acceptArgument, acceptReply[k])
 		acceptCount := 0
-		for acceptCount < k {
+		for acceptCount < k-1 {
 			select {
 			case _ = <-acceptChan:
 				acceptCount++
-				if acceptCount >= k {
+				if acceptCount >= k-1 {
 					break
 				}
 			case _ = <-time.After(2 * time.Second):
