@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -23,6 +24,7 @@ type pacmanServer struct {
 	masterConn           *rpc.Client            //connection to master
 	paxos                paxosWrap.PaxosWrap    //paxosTestWrap.PaxosWrap - for testing //paxos.Paxos - for not testing
 	ID                   int
+	lock                 *sync.Mutex
 }
 
 //two types of disconnection
@@ -42,6 +44,7 @@ func NewServer(masterServerHostPort string, port int, nodeID int, test bool, fla
 	pacmanServer.nodes = make([]loadbalancerrpc.Node, loadbalancerrpc.InitCliNum)
 	pacmanServer.masterServerHostPort = masterServerHostPort
 	pacmanServer.ID = nodeID
+	pacmanServer.lock = new(sync.Mutex)
 	//if it's the slave client
 	conn, err := rpc.DialHTTP("tcp", masterServerHostPort)
 	if err != nil {
@@ -121,6 +124,7 @@ func (cl *pacmanServer) GetLogs(args *serverrpc.GetArgs, reply *serverrpc.GetRep
 }
 
 func (cl *pacmanServer) MakeMove(args *serverrpc.MoveArgs, reply *serverrpc.MoveReply) error {
+	cl.lock.Lock()
 	direction := args.Direction
 	fmt.Println("server got : ", direction)
 	err := cl.paxos.RequestValue(direction)
@@ -130,6 +134,7 @@ func (cl *pacmanServer) MakeMove(args *serverrpc.MoveArgs, reply *serverrpc.Move
 	pack := new(serverrpc.MoveReply)
 	pack.Direction = direction
 	*reply = *pack
+	cl.lock.Unlock()
 	return nil
 
 }
