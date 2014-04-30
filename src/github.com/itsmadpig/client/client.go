@@ -119,19 +119,22 @@ func (pc *pacClient) ReconnectToLB() error {
 }
 
 func (pc *pacClient) isNewMessage(newMap map[int]string) bool {
+	temp := false
 	for index, value := range newMap {
 		thisVal, ok := pc.logs[index]
 		if !ok {
 			split := strings.Split(value, ":")
 			if split[0] != pc.ID {
-				fmt.Print(value)
+				//fmt.Print(value)
+				temp = true
 			}
 		} else if value != thisVal {
 			fmt.Println("Values are not the same")
+			temp = true
 		}
 	}
 	pc.logs = newMap
-	return false
+	return temp
 }
 
 func (pc *pacClient) GetLogs() map[int]string {

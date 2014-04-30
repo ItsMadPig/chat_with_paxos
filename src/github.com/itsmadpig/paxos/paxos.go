@@ -85,22 +85,28 @@ func (pax *paxos) Prepare(args *paxosrpc.PrepareArgs, reply *paxosrpc.PrepareRep
 	//if so highestSeenProposal = n. returns acceptedProposal number.
 	fmt.Println("prepare Called")
 	pack := new(paxosrpc.PrepareReply)
-	i := 0
-	for i = 0; i < len(pax.serverHostPorts); i++ {
-		hP := pax.serverHostPorts[i]
-		if hP == args.HostPort {
-			cli, err := rpc.DialHTTP("tcp", hP)
-			if err != nil {
-				return err
-			}
-			pax.paxosServers[i] = cli
-		}
-	}
 
 	if args.Round <= pax.highestRound {
 		pack.HighestAcceptedNum = pax.highestRound
 		pack.Value = pax.logs[args.Round]
 		pack.Status = paxosrpc.OldInstance
+		*reply = *pack
+		i := 0
+		count := 0
+		for i = 0; i < len(pax.serverHostPorts); i++ {
+			hP := pax.serverHostPorts[i]
+			if hP == args.HostPort {
+				cli, err := rpc.DialHTTP("tcp", hP)
+				if err != nil {
+					return err
+				}
+				pax.paxosServers[count] = cli
+			} else if hP != pax.myHostPort {
+				count++
+			}
+		}
+
+		return nil
 
 	} else if args.ProposalNumber > pax.highestSeenProposal {
 		pax.highestSeenProposal = args.ProposalNumber
@@ -114,6 +120,7 @@ func (pax *paxos) Prepare(args *paxosrpc.PrepareArgs, reply *paxosrpc.PrepareRep
 	}
 
 	*reply = *pack
+
 	return nil
 }
 
@@ -197,6 +204,7 @@ func (pax *paxos) RequestValue(reqValue string) error {
 	propArgument := new(paxosrpc.PrepareArgs)
 	propArgument.ProposalNumber = pax.proposalNum
 	propArgument.Round = pax.currentRound
+	propArgument.HostPort = pax.myHostPort
 
 	propReply := make([]*paxosrpc.PrepareReply, len(pax.paxosServers)+1)
 	propChan := make(chan *rpc.Call, len(pax.paxosServers))
