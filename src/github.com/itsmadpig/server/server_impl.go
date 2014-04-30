@@ -102,7 +102,9 @@ func NewServer(masterServerHostPort string, port int, nodeID int, test bool, fla
 
 	if reply.Recovering == true {
 		//nop
+		fmt.Println("I'M DOING NOP")
 		err = pacmanServer.paxos.RequestValue("")
+
 		if err != nil {
 			fmt.Println("Can't get logs from other servers by NOP")
 		}

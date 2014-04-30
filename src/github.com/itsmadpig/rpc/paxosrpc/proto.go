@@ -4,7 +4,6 @@ const (
 	REJECT      = 1 //1
 	OK          = 2 //2
 	OldInstance = 3 //3
-	Prepareres  = 4 //4
 )
 
 type PrepareArgs struct {
@@ -38,6 +37,7 @@ type CommitArgs struct {
 
 type CommitReply struct {
 	Value string
+	Self  int
 }
 
 type GetArgs struct {
