@@ -7,6 +7,7 @@ import (
 	"github.com/itsmadpig/rpc/serverrpc"
 	"net/rpc"
 	//"strconv"
+	"strings"
 	"time"
 )
 
@@ -121,14 +122,15 @@ func (pc *pacClient) isNewMessage(newMap map[int]string) bool {
 	for index, value := range newMap {
 		thisVal, ok := pc.logs[index]
 		if !ok {
-			pc.logs = newMap
-			return true
-		}
-		if value != thisVal {
-			pc.logs = newMap
-			return true
+			split := strings.Split(value, ":")
+			if split[0] != pc.ID {
+				fmt.Print(value)
+			}
+		} else if value != thisVal {
+			fmt.Println("Values are not the same")
 		}
 	}
+	pc.logs = newMap
 	return false
 }
 
@@ -158,7 +160,10 @@ func (pc *pacClient) GetLogs() map[int]string {
 }
 
 func (pc *pacClient) MakeMove(direction string) error {
-	fmt.Println(pc.ID, ":", direction)
+	if direction == "" {
+		fmt.Println("Cannot send empty message")
+		return nil
+	}
 	args := new(serverrpc.MoveArgs)
 	reply := new(serverrpc.MoveReply)
 	args.Direction = pc.ID + ":" + direction
