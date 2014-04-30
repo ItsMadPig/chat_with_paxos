@@ -7,6 +7,7 @@ import (
 	"github.com/itsmadpig/rpc/serverrpc"
 	"net/rpc"
 	//"strconv"
+	"strings"
 	"time"
 )
 
@@ -69,6 +70,7 @@ func NewPacClient(loadHostPort string, port int, ID string) (PacClient, error) {
 			return nil, errors.New("reconnect fail, most servers dead")
 		}
 	}
+	fmt.Print(pac.ID, ":")
 	pac.GetLogs()
 	go pac.RefreshTimer()
 	return pac, nil
@@ -117,17 +119,27 @@ func (pc *pacClient) ReconnectToLB() error {
 }
 
 func (pc *pacClient) isNewMessage(newMap map[int]string) bool {
+	isNew := false
 	for index, value := range newMap {
 		thisVal, ok := pc.logs[index]
 		if !ok {
-			pc.logs = newMap
-			return true
-		}
-		if value != thisVal {
-			pc.logs = newMap
-			return true
+			split := strings.Split(value, ":")
+			if split[0] != pc.ID {
+				if !isNew {
+					fmt.Println("")
+				}
+				fmt.Print(value)
+			}
+			isNew = true
+		} else if value != thisVal {
+			isNew = true
+			fmt.Println("Values are not the same")
 		}
 	}
+	if isNew {
+		fmt.Print(pc.ID, ":")
+	}
+	pc.logs = newMap
 	return false
 }
 
@@ -140,7 +152,7 @@ func (pc *pacClient) GetLogs() map[int]string {
 		err = pc.ReconnectToLB()
 		if err != nil {
 			fmt.Println("all servers failed.. closing down..")
-			return
+			return nil
 		}
 	}
 	if pc.isNewMessage(reply.Logs) == false {
@@ -156,7 +168,10 @@ func (pc *pacClient) GetLogs() map[int]string {
 }
 
 func (pc *pacClient) MakeMove(direction string) error {
-	fmt.Println(pc.ID, ":", direction)
+	if direction == "" {
+		fmt.Println("Cannot send empty message")
+		return nil
+	}
 	args := new(serverrpc.MoveArgs)
 	reply := new(serverrpc.MoveReply)
 	args.Direction = pc.ID + ":" + direction
