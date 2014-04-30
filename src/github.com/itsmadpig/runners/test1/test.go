@@ -58,7 +58,6 @@ func main() {
 	logs := client1.GetLogs()
 	_, ok := logs[10]
 	if !ok {
-		fmt.Println("0: failed")
 		return
 	} else {
 		fmt.Println(logs[10])

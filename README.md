@@ -76,9 +76,9 @@ Every commited round is unique.
 		server id=1 shouldn't get commited until 30 seconds
 		////////////////////////////////////////////
 		./lrunner
-		./srunner =master="localhost:8009" -port=9010 -id=1 -mode=10::a:20::c:30
-		./srunner =master="localhost:8009" -port=9011 -id=2
-		./srunner =master="localhost:8009" -port=9012 -id=3
+		./srunner -master="localhost:8009" -port=9010 -id=1 -mode=10::a:20::c:30
+		./srunner -master="localhost:8009" -port=9011 -id=2
+		./srunner -master="localhost:8009" -port=9012 -id=3
 		./test1
 
 
@@ -88,9 +88,9 @@ Every commited round is unique.
 		server id=1 should get commited after 10 seconds
 		//////////////////////////////////////////
 		./lrunner
-		./srunner =master="localhost:8009" -port=9010 -id=1 -mode=10::a:20::c:10
-		./srunner =master="localhost:8009" -port=9011 -id=2
-		./srunner =master="localhost:8009" -port=9012 -id=3
+		./srunner -master="localhost:8009" -port=9010 -id=1 -mode=10::a:20::c:10
+		./srunner -master="localhost:8009" -port=9011 -id=2
+		./srunner -master="localhost:8009" -port=9012 -id=3
 		./test1
 
 
@@ -100,9 +100,9 @@ Every commited round is unique.
 		server id
 		/////////////////////////////////////////
 		./lrunner
-		./srunner =master="localhost:8009" -port=9010 -id=1 -mode="d:0"
-		./srunner =master="localhost:8009" -port=9011 -id=2 -mode="d:0"
-		./srunner =master="localhost:8009" -port=9012 -id=3
+		./srunner -master="localhost:8009" -port=9010 -id=1 -mode="d:0"
+		./srunner -master="localhost:8009" -port=9012 -id=2
+		./srunner -master="localhost:8009" -port=9011 -id=3 -mode="d:0"
 		./test1
 
 

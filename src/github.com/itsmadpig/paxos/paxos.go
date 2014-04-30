@@ -226,7 +226,6 @@ func (pax *paxos) RequestValue(reqValue string) error {
 	}
 
 	count++
-	fmt.Println("COUNT", count)
 	//check what the highest proposal number and highest value is
 	propAccepted := 0
 	tempHighest := 0
@@ -259,6 +258,7 @@ func (pax *paxos) RequestValue(reqValue string) error {
 
 	}
 	propAccepted++
+	fmt.Println("Proposed COUNT", propAccepted)
 	value := ""
 	if tempValue != "" {
 		value = tempValue
@@ -330,7 +330,7 @@ func (pax *paxos) RequestValue(reqValue string) error {
 			}
 		}
 		acceptAccepted++
-
+		fmt.Println("ACCEPTED COUNT ", acceptAccepted)
 		if acceptAccepted >= majority {
 			commitArg := new(paxosrpc.CommitArgs)
 			commitArg.Value = value
