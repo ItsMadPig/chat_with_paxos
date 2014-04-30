@@ -33,7 +33,7 @@ func main() {
 	// If nodeID is 0, then assign a random 32-bit integer instead.
 
 	// Create and start the StorageServer.
-	flags := []string{""}
+	flags := []string{"s:2"}
 	_, err := server.NewServer(*masterHostPort, *port, *nodeID, true, flags)
 	if err != nil {
 		log.Fatalln("Failed to create storage server:", err)
