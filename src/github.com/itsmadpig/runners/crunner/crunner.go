@@ -10,13 +10,13 @@ import (
 )
 
 const defaultPort = 9009
-const defaultID = 1
+const defaultID = "Client"
 
 var (
 	port = flag.Int("port1", defaultPort, "port number to listen on")
 
 	masterHostPort = flag.String("master", "", "master storage server host port (if non-empty then this storage server is a slave)")
-	ID             = flag.Int("id", defaultID, "a unique ID for client")
+	ID             = flag.String("id", defaultID, "a unique ID for client")
 )
 
 func init() {

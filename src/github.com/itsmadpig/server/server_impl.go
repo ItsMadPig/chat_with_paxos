@@ -4,8 +4,10 @@ import (
 	//"errors"
 	"fmt"
 	"github.com/itsmadpig/paxos"
+	"github.com/itsmadpig/paxosTestWrap"
 	"github.com/itsmadpig/rpc/loadbalancerrpc"
 	"github.com/itsmadpig/rpc/paxosrpc"
+	//"github.com/itsmadpig/rpc/paxoswraprpc"
 	"github.com/itsmadpig/rpc/serverrpc"
 	"net"
 	"net/http"
@@ -19,7 +21,7 @@ type pacmanServer struct {
 	selfNode             *loadbalancerrpc.Node  //node of itself
 	nodes                []loadbalancerrpc.Node // map of all nodes
 	masterConn           *rpc.Client            //connection to master
-	paxos                paxos.Paxos
+	paxos                paxosWrap.PaxosWrap    //paxosTestWrap.PaxosWrap - for testing //paxos.Paxos - for not testing
 	ID                   int
 }
 
@@ -34,7 +36,7 @@ type pacmanServer struct {
 
 //if masterServerHostPort isn't empty, then it's a masterclient,
 //else it's a slaveclient to start with
-func NewServer(masterServerHostPort string, port int, nodeID int) (PacmanServer, error) {
+func NewServer(masterServerHostPort string, port int, nodeID int, test bool, flags []string) (PacmanServer, error) {
 	pacmanServer := new(pacmanServer)
 	pacmanServer.selfNode = new(loadbalancerrpc.Node)
 	pacmanServer.nodes = make([]loadbalancerrpc.Node, loadbalancerrpc.InitCliNum)
@@ -48,7 +50,9 @@ func NewServer(masterServerHostPort string, port int, nodeID int) (PacmanServer,
 	pacmanServer.masterConn = conn
 	args := &loadbalancerrpc.RegisterArgs{ServerInfo: loadbalancerrpc.Node{HostPort: net.JoinHostPort("localhost", strconv.Itoa(port)), NodeID: nodeID}}
 	var reply loadbalancerrpc.RegisterReply
+
 	err = pacmanServer.masterConn.Call("LoadBalancer.RegisterServer", args, &reply)
+	fmt.Println("trying to connect , Host port:", port, " ready :", reply.Status)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -72,14 +76,26 @@ func NewServer(masterServerHostPort string, port int, nodeID int) (PacmanServer,
 	if err != nil {
 		return nil, err
 	}
-	err = rpc.RegisterName("PacmanServer", serverrpc.Wrap(pacmanServer))
-	if err != nil {
-		return nil, err
+	if test {
+		err = rpc.RegisterName("PacmanServer", serverrpc.Wrap(pacmanServer))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = rpc.RegisterName("PacmanServer", serverrpc.Wrap(pacmanServer))
+		if err != nil {
+			return nil, err
+		}
 	}
 	rpc.HandleHTTP()
 	go http.Serve(listener, nil)
+	if test {
+		fmt.Println("Test Mode : On")
+		pacmanServer.paxos, err = paxosWrap.NewPaxosWrap(net.JoinHostPort("localhost", strconv.Itoa(port)), nodeID, hostPorts, flags)
+	} else {
+		pacmanServer.paxos, err = paxos.NewPaxos(net.JoinHostPort("localhost", strconv.Itoa(port)), nodeID, hostPorts, false)
+	}
 
-	pacmanServer.paxos, err = paxos.NewPaxos(net.JoinHostPort("localhost", strconv.Itoa(port)), nodeID, hostPorts)
 	if err != nil {
 		return nil, err
 	}

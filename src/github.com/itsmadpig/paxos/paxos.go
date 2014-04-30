@@ -29,7 +29,7 @@ type paxos struct {
 	paxosServers    []*rpc.Client
 }
 
-func NewPaxos(myHostPort string, ID int, serverHostPorts []string) (Paxos, error) {
+func NewPaxos(myHostPort string, ID int, serverHostPorts []string, test bool) (Paxos, error) {
 	thisPaxos := new(paxos)
 	thisPaxos.ID = ID
 	thisPaxos.currentRound = 0
@@ -40,12 +40,17 @@ func NewPaxos(myHostPort string, ID int, serverHostPorts []string) (Paxos, error
 	thisPaxos.serverHostPorts = serverHostPorts
 	thisPaxos.logs = make(map[int]string)
 
-	err := rpc.RegisterName("Paxos", paxosrpc.Wrap(thisPaxos))
-	if err != nil {
-		return nil, err
+	if !test {
+		fmt.Println("Testing Mode : False")
+		err := rpc.RegisterName("Paxos", paxosrpc.Wrap(thisPaxos))
+		if err != nil {
+			return nil, err
+		}
+
 	}
+
 	//dial all other paxos and create a list of them to call.
-	err = thisPaxos.DialAllServers()
+	err := thisPaxos.DialAllServers()
 	for i := 0; i < 5; i++ {
 		time.Sleep(time.Second)
 		err = thisPaxos.DialAllServers()

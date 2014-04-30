@@ -6,7 +6,7 @@ import (
 	"github.com/itsmadpig/rpc/loadbalancerrpc"
 	"github.com/itsmadpig/rpc/serverrpc"
 	"net/rpc"
-	"strconv"
+	//"strconv"
 	"time"
 )
 
@@ -19,10 +19,10 @@ type pacClient struct {
 	logs           map[int]string
 }
 
-func NewPacClient(loadHostPort string, port, ID int) (PacClient, error) {
+func NewPacClient(loadHostPort string, port int, ID string) (PacClient, error) {
 	pac := new(pacClient)
 	pac.loadHostPort = loadHostPort
-	pac.ID = strconv.Itoa(ID)
+	pac.ID = ID
 	pac.logs = make(map[int]string)
 	cli, err := rpc.DialHTTP("tcp", loadHostPort)
 	if err != nil {
@@ -131,13 +131,13 @@ func (pc *pacClient) isNewMessage(newMap map[int]string) bool {
 	return false
 }
 
-func (pc *pacClient) GetLogs() {
+func (pc *pacClient) GetLogs() map[int]string {
 
 	reply := new(serverrpc.GetReply)
 	args := new(serverrpc.GetArgs)
 	pc.serverConn.Call("PacmanServer.GetLogs", args, &reply)
 	if pc.isNewMessage(reply.Logs) == false {
-		return
+		return pc.logs
 	}
 	fmt.Println("**************************SCREEN*************************")
 	for _, value := range pc.logs {
@@ -145,6 +145,7 @@ func (pc *pacClient) GetLogs() {
 	}
 	fmt.Println("***********************END OF SCREEN ********************")
 	fmt.Print("Message : ")
+	return pc.logs
 }
 
 func (pc *pacClient) MakeMove(direction string) error {

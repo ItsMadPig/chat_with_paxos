@@ -4,4 +4,5 @@ package client
 
 type PacClient interface {
 	MakeMove(string) error
+	GetLogs() map[int]string
 }
