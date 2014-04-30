@@ -1,15 +1,16 @@
 package paxosrpc
 
 const (
-	REJECT      = iota //0
-	OK          = iota //1
-	OldInstance = iota //2
-	Prepareres  = iota //3
+	REJECT      = 1 //1
+	OK          = 2 //2
+	OldInstance = 3 //3
+	Prepareres  = 4 //4
 )
 
 type PrepareArgs struct {
 	ProposalNumber int
 	Round          int
+	HostPort       string
 }
 
 type PrepareReply struct {

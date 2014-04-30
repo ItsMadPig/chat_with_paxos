@@ -76,16 +76,10 @@ func NewServer(masterServerHostPort string, port int, nodeID int, test bool, fla
 	if err != nil {
 		return nil, err
 	}
-	if test {
-		err = rpc.RegisterName("PacmanServer", serverrpc.Wrap(pacmanServer))
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		err = rpc.RegisterName("PacmanServer", serverrpc.Wrap(pacmanServer))
-		if err != nil {
-			return nil, err
-		}
+
+	err = rpc.RegisterName("PacmanServer", serverrpc.Wrap(pacmanServer))
+	if err != nil {
+		return nil, err
 	}
 	rpc.HandleHTTP()
 	go http.Serve(listener, nil)
