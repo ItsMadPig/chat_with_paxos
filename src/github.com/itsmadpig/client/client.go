@@ -140,6 +140,7 @@ func (pc *pacClient) GetLogs() {
 		err = pc.ReconnectToLB()
 		if err != nil {
 			fmt.Println("all servers failed.. closing down..")
+			return
 		}
 	}
 	if pc.isNewMessage(reply.Logs) == false {

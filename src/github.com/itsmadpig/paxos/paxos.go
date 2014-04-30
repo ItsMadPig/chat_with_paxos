@@ -89,6 +89,16 @@ func (pax *paxos) Prepare(args *paxosrpc.PrepareArgs, reply *paxosrpc.PrepareRep
 	fmt.Println("pax.highestSeenProposal = ", pax.highestSeenProposal)
 	fmt.Println("received ProposalNumber = ", args.ProposalNumber)
 
+	for i, hP := range pax.serverHostPorts {
+		if hP == args.HostPort {
+			cli, err := rpc.DialHTTP("tcp", hP)
+			if err != nil {
+				return err
+			}
+			pax.paxosServers[i] = cli
+		}
+	}
+
 	if args.Round <= pax.highestRound {
 		pack.HighestAcceptedNum = args.Round
 		pack.Value = pax.logs[args.Round]

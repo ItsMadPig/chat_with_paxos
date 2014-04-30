@@ -10,6 +10,7 @@ const (
 type PrepareArgs struct {
 	ProposalNumber int
 	Round          int
+	HostPort       string
 }
 
 type PrepareReply struct {
