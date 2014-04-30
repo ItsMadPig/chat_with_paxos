@@ -8,6 +8,7 @@ const (
 	NotReady = iota //0
 	OK       = iota //1
 	MOSTFAIL = iota // 2
+	INVALID  = iota
 )
 const (
 	InitCliNum = 3
@@ -32,6 +33,7 @@ type RegisterArgs struct {
 	ServerInfo Node
 }
 type RegisterReply struct {
-	Status  int
-	Servers []Node
+	Status     int
+	Servers    []Node
+	Recovering bool
 }

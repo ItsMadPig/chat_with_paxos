@@ -9,3 +9,14 @@ Four components,
 1. failure of Nodes
 	
 
+	if client connects later, server pushes all previous logs to client (working)
+
+
+	if server crashes, all clients connected to that server will be routed by Load Balancer to another working server
+	if that crashed server reconnects back, it will be updated with all previous logs automatically, by sending NOPs 
+	and resume regular functionality
+
+	if another server with diff ID tries to connect to the server after it already initialized, don't allow.
+
+
+

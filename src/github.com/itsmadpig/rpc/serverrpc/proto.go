@@ -33,4 +33,5 @@ type GetArgs struct {
 
 type GetReply struct {
 	Logs map[int]string
+	ID   string
 }

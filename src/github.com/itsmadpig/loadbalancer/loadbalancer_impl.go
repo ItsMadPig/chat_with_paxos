@@ -17,7 +17,6 @@ type loadBalancer struct {
 	nodesClientNum    []int
 	nodesFailed       []bool
 	nodesFailedNumber int
-	initiated         bool
 
 	numOKs int
 }
@@ -30,7 +29,6 @@ func NewLoadBalancer(hostPort string) (LoadBalancer, error) {
 	loadBalancer.nodesClientNum = make([]int, loadbalancerrpc.InitCliNum)
 	loadBalancer.nodesFailed = make([]bool, loadbalancerrpc.InitCliNum)
 	loadBalancer.nodesFailedNumber = 0
-	loadBalancer.initiated = false
 	loadBalancer.numOKs = 0
 
 	listener, err := net.Listen("tcp", hostPort)
@@ -130,20 +128,27 @@ func (lb *loadBalancer) RouteToServer(args *loadbalancerrpc.RouteArgs, reply *lo
 func (lb *loadBalancer) RegisterServer(args *loadbalancerrpc.RegisterArgs, reply *loadbalancerrpc.RegisterReply) error {
 	fmt.Println("called registerServer")
 	pack := new(loadbalancerrpc.RegisterReply)
+	pack.Recovering = false
 
 	add := true
 	added := false
 
-	if (lb.initiated == true) && (lb.numOKs == loadbalancerrpc.InitCliNum) {
+	if lb.numOKs == loadbalancerrpc.InitCliNum {
+		invalidServer := true
 		for i := 0; i < lb.numCurrentNodes; i++ {
 			if (lb.nodes[i]).NodeID == args.ServerInfo.NodeID {
 				lb.nodesFailed[i] = false
 				lb.nodesFailedNumber -= 1
+				invalidServer = false
 			}
 		}
-
+		pack.Recovering = true
 		pack.Status = loadbalancerrpc.OK
 		pack.Servers = lb.nodes
+
+		if invalidServer == true {
+			pack.Status = loadbalancerrpc.INVALID
+		}
 		*reply = *pack
 		return nil
 
@@ -196,7 +201,6 @@ func (lb *loadBalancer) RegisterServer(args *loadbalancerrpc.RegisterArgs, reply
 		return errors.New("not ready yet")
 	} else {
 		//if ready
-		lb.initiated = true
 		pack.Status = loadbalancerrpc.OK
 		pack.Servers = lb.nodes
 		*reply = *pack

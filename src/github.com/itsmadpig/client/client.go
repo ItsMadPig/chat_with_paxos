@@ -69,6 +69,7 @@ func NewPacClient(loadHostPort string, port int, ID string) (PacClient, error) {
 			return nil, errors.New("reconnect fail, most servers dead")
 		}
 	}
+	fmt.Println("Server connected", reply.HostPort)
 	pac.GetLogs()
 	go pac.RefreshTimer()
 	return pac, nil
@@ -135,12 +136,13 @@ func (pc *pacClient) GetLogs() map[int]string {
 
 	reply := new(serverrpc.GetReply)
 	args := new(serverrpc.GetArgs)
+	args.ID = pc.ID
 	err := pc.serverConn.Call("PacmanServer.GetLogs", args, &reply)
 	if err != nil {
 		err = pc.ReconnectToLB()
 		if err != nil {
 			fmt.Println("all servers failed.. closing down..")
-			return
+			return nil
 		}
 	}
 	if pc.isNewMessage(reply.Logs) == false {

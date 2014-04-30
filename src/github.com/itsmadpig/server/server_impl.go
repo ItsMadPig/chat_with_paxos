@@ -1,7 +1,7 @@
 package server
 
 import (
-	//"errors"
+	"errors"
 	"fmt"
 	"github.com/itsmadpig/paxos"
 	"github.com/itsmadpig/paxosTestWrap"
@@ -56,9 +56,12 @@ func NewServer(masterServerHostPort string, port int, nodeID int, test bool, fla
 	if err != nil {
 		fmt.Println(err)
 	}
-	for reply.Status != loadbalancerrpc.OK {
+	fmt.Println(reply.Status)
+	if reply.Status == loadbalancerrpc.INVALID {
+		return nil, errors.New("you're an invalid server")
+	}
+	for reply.Status == loadbalancerrpc.NotReady {
 		//if master server is still busy
-		fmt.Println(reply.Status)
 		fmt.Println("retrying to connect")
 		time.Sleep(1000 * time.Millisecond)
 		err = pacmanServer.masterConn.Call("LoadBalancer.RegisterServer", args, &reply)
@@ -93,6 +96,15 @@ func NewServer(masterServerHostPort string, port int, nodeID int, test bool, fla
 	if err != nil {
 		return nil, err
 	}
+
+	if reply.Recovering == true {
+		//nop
+		err = pacmanServer.paxos.RequestValue("")
+		if err != nil {
+			fmt.Println("Can't get logs from other servers by NOP")
+		}
+	}
+
 	return pacmanServer, nil
 
 }
