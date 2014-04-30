@@ -41,7 +41,6 @@ func NewPaxos(myHostPort string, ID int, serverHostPorts []string, test bool) (P
 	thisPaxos.logs = make(map[int]string)
 
 	if !test {
-		fmt.Println("Testing Mode : False")
 		err := rpc.RegisterName("Paxos", paxosrpc.Wrap(thisPaxos))
 		if err != nil {
 			return nil, err
@@ -86,12 +85,9 @@ func (pax *paxos) Prepare(args *paxosrpc.PrepareArgs, reply *paxosrpc.PrepareRep
 	//if so highestSeenProposal = n. returns acceptedProposal number.
 	fmt.Println("prepare Called")
 	pack := new(paxosrpc.PrepareReply)
-	/*	fmt.Println("pax.highestRound = ", pax.highestRound)
-		fmt.Println("received round = ", args.Round)
-		fmt.Println("pax.highestSeenProposal = ", pax.highestSeenProposal)
-		fmt.Println("received ProposalNumber = ", args.ProposalNumber)
-	*/
-	for i, hP := range pax.serverHostPorts {
+	i := 0
+	for i = 0; i < len(pax.serverHostPorts); i++ {
+		hP := pax.serverHostPorts[i]
 		if hP == args.HostPort {
 			cli, err := rpc.DialHTTP("tcp", hP)
 			if err != nil {
@@ -111,12 +107,10 @@ func (pax *paxos) Prepare(args *paxosrpc.PrepareArgs, reply *paxosrpc.PrepareRep
 		pack.Value = pax.value
 		pack.HighestAcceptedNum = pax.acceptedProposal
 		pack.Status = paxosrpc.OK
-		fmt.Println("OK")
 	} else {
 		pack.HighestAcceptedNum = pax.highestSeenProposal
 		pack.Value = pax.value
 		pack.Status = paxosrpc.REJECT
-		fmt.Println("Reject")
 	}
 
 	*reply = *pack
@@ -153,7 +147,7 @@ func (pax *paxos) Accept(args *paxosrpc.AcceptArgs, reply *paxosrpc.AcceptReply)
 
 func (pax *paxos) Commit(args *paxosrpc.CommitArgs, reply *paxosrpc.CommitReply) error {
 	fmt.Println("Commit Called")
-	fmt.Println(args.Round, args.Value)
+	fmt.Println("key: ", args.Round, "   value: ", args.Value)
 	pack := new(paxosrpc.CommitReply)
 	pack.Self = pax.ID
 	if pax.highestRound < args.Round {
@@ -186,11 +180,10 @@ func (pax *paxos) RequestValue(reqValue string) error {
 	//if value is empty, and mojority replied okay, send out accepts.
 	//if highestSeenProposal is same as yours, your value is commited and you can return,
 	//else start requestValue again.
-
+	fmt.Println("request Value called")
 	pax.stable = false
 	majority := ((len(pax.paxosServers) + 1) / 2) + 1
 
-	fmt.Println("request Value called")
 	if pax.currentRound == 0 {
 		pax.currentRound = pax.highestRound + 10 //////////fix, when restart paxos, shouldn't increment
 	}
@@ -218,8 +211,6 @@ func (pax *paxos) RequestValue(reqValue string) error {
 
 	propReply[i] = new(paxosrpc.PrepareReply)
 	pax.Prepare(propArgument, propReply[i]) //not sure if stored in reply
-	fmt.Println("value", propReply[i].Value)
-	fmt.Println("highestacceptnum", propReply[i].HighestAcceptedNum)
 	//fix this
 	count := 0
 	for count < i-1 {
@@ -235,21 +226,21 @@ func (pax *paxos) RequestValue(reqValue string) error {
 	}
 
 	count++
-
+	fmt.Println("COUNT", count)
 	//check what the highest proposal number and highest value is
 	propAccepted := 0
 	tempHighest := 0
 	tempValue := ""
-	for _, rep := range propReply {
+	for j := 0; j < count+1; j++ {
+		rep := propReply[j]
 		//can rep be null?
 		if rep.Status != 0 {
-			fmt.Println("status", propReply[i].Status)
 			if rep.Status == paxosrpc.OldInstance {
+				fmt.Println("Updating log")
 				commitArgs := new(paxosrpc.CommitArgs)
 				commitReply := new(paxosrpc.CommitReply)
 				commitArgs.Value = rep.Value
 				commitArgs.Round = pax.currentRound
-				fmt.Println("Reach here 1")
 				if pax.currentRound < rep.HighestAcceptedNum {
 					pax.Commit(commitArgs, commitReply)
 					return pax.RequestValue(reqValue)
@@ -267,6 +258,7 @@ func (pax *paxos) RequestValue(reqValue string) error {
 		}
 
 	}
+	propAccepted++
 	value := ""
 	if tempValue != "" {
 		value = tempValue
@@ -327,7 +319,6 @@ func (pax *paxos) RequestValue(reqValue string) error {
 					commitReply := new(paxosrpc.CommitReply)
 					commitArgs.Value = rep.Value
 					commitArgs.Round = pax.currentRound
-					fmt.Println("REACH HERE 2")
 					if pax.currentRound < rep.HighestSeen {
 						pax.Commit(commitArgs, commitReply)
 						return pax.RequestValue(reqValue)
@@ -338,6 +329,7 @@ func (pax *paxos) RequestValue(reqValue string) error {
 				}
 			}
 		}
+		acceptAccepted++
 
 		if acceptAccepted >= majority {
 			commitArg := new(paxosrpc.CommitArgs)
@@ -346,9 +338,8 @@ func (pax *paxos) RequestValue(reqValue string) error {
 			commitReply := new(paxosrpc.CommitReply)
 			for _, cli := range pax.paxosServers {
 				acceptReply[k] = new(paxosrpc.AcceptReply)
-				cli.Go("Paxos.Commit", commitArg, commitReply, nil) //it blocks, if doesn't return for some time, false
+				cli.Go("Paxos.Commit", commitArg, commitReply, nil)
 			}
-			fmt.Println("REACH HERE 3")
 			pax.Commit(commitArg, commitReply)
 		} else {
 			time.Sleep(1 * time.Second)

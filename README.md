@@ -7,6 +7,8 @@ Four components,
 4. Paxos object - object imbedded in servers that allow the servers to 
 
 
+number of servers is stored in InitCliNum = 3 in loadbalancerrpc/proto.go
+
 Everything assumes that the Load balancer does not fail and is always running (Load Balancer Router)
 First, load balancer waits for all servers to connect. Once all are connected, service to client begins
 If another server with different ID tries to connect to the server after it already initialized, don't allow.
@@ -29,6 +31,34 @@ Every commited round is unique.
 				and it will continue updating its logs until its highestRound is not commited (not stored in the log).
 		Resume regular functionality
 
+		/////////////////////////////////////////////////////////////////////////////////
+		test for disconnecting server with client on, and client reroutes, paxos works
+		test for disconnecting server, with client not on, paxos works
+		test for disconnecting server, and paxos works
+		test for disconnecting server and reconnecting it back, does NOP and gets previous values
+			then connect a client to that server and paxos works
+
+
+		./lrunner
+		./srunner =master="localhost:8009" -port=9010 -id=1
+		./srunner =master="localhost:8009" -port=9011 -id=2
+		./srunner =master="localhost:8009" -port=9012 -id=3
+		./crunner -id=Aaron -port1=2002
+		type something 
+		type something
+		./crunner -id=Lala -port1=2003
+		type something
+		kill 1st server, then client reroutes to server 3, because least load
+		type something, paxos working
+		then restart server 1, it loads all previous logs,
+		now connect a new client, and new client downloads all logs
+		/////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
 
 2. Network temporarily disabled causes package delay or package Dropped
 	a) Proposer delays: 
@@ -39,8 +69,52 @@ Every commited round is unique.
 	b) Acceptor delays: Temporarily disable connection of server for more than the proposer is willing to wait, if proposer got majority and already moved on (at accept or commit phase)
 	   other servers that are already ahead in round number will ignore it. That server will get updated on its log if it proposes something later.
 
+
+	   //////////////////////////////////////////
+		test 1
+		two clients 3 servers
+		server id=1 shouldn't get commited until 30 seconds
+		////////////////////////////////////////////
+		./lrunner
+		./srunner =master="localhost:8009" -port=9010 -id=1 -mode=10::a:20::c:30
+		./srunner =master="localhost:8009" -port=9011 -id=2
+		./srunner =master="localhost:8009" -port=9012 -id=3
+		./test1
+
+
+		/////////////////////////////////////////
+		test 2
+		two clients 3 servers
+		server id=1 should get commited after 10 seconds
+		//////////////////////////////////////////
+		./lrunner
+		./srunner =master="localhost:8009" -port=9010 -id=1 -mode=10::a:20::c:10
+		./srunner =master="localhost:8009" -port=9011 -id=2
+		./srunner =master="localhost:8009" -port=9012 -id=3
+		./test1
+
+
+		/////////////////////////////////////////
+		test 3
+		two clients 3 servers
+		server id
+		/////////////////////////////////////////
+		./lrunner
+		./srunner =master="localhost:8009" -port=9010 -id=1 -mode="d:0"
+		./srunner =master="localhost:8009" -port=9011 -id=2 -mode="d:0"
+		./srunner =master="localhost:8009" -port=9012 -id=3
+		./test1
+
+
+
+
 3. State 
 	All the logs are replicated through paxos for correctness
+
+
+
+
+
 
 
 

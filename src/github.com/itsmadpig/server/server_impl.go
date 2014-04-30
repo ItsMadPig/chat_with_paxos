@@ -59,7 +59,6 @@ func NewServer(masterServerHostPort string, port int, nodeID int, test bool, fla
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(reply.Status)
 	if reply.Status == loadbalancerrpc.INVALID {
 		return nil, errors.New("you're an invalid server")
 	}

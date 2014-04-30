@@ -1,15 +1,15 @@
 package paxoswraprpc
 
 const (
-	REJECT      = iota //0
-	OK          = iota //1
-	OldInstance = iota //2
-	Prepareres  = iota //3
+	REJECT      = 1 //1
+	OK          = 2 //2
+	OldInstance = 3 //3
 )
 
 type PrepareArgs struct {
 	ProposalNumber int
 	Round          int
+	HostPort       string
 }
 
 type PrepareReply struct {
@@ -37,6 +37,7 @@ type CommitArgs struct {
 
 type CommitReply struct {
 	Value string
+	Self  int
 }
 
 type GetArgs struct {
@@ -45,4 +46,5 @@ type GetArgs struct {
 
 type GetReply struct {
 	Logs map[int]string
+	ID   string
 }
