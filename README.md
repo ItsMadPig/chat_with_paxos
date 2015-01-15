@@ -40,9 +40,9 @@ Every commited round is unique.
 
 
 		./lrunner
-		./srunner =master="localhost:8009" -port=9010 -id=1
-		./srunner =master="localhost:8009" -port=9011 -id=2
-		./srunner =master="localhost:8009" -port=9012 -id=3
+		./srunner -master="localhost:8009" -port=9010 -id=1
+		./srunner -master="localhost:8009" -port=9011 -id=2
+		./srunner -master="localhost:8009" -port=9012 -id=3
 		./crunner -id=Aaron -port1=2002
 		type something 
 		type something
